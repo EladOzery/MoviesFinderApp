@@ -78,7 +78,7 @@ int main() {
         ImGui::Begin("Movie Manager App", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
         // Search bar
-        static char buffer[128] = ""; // Buffer for user input
+        static char buffer[256] = ""; // Buffer for user input
         ImGui::InputText("Search Movies", buffer, sizeof(buffer));
 
         // Search button
