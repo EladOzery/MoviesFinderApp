@@ -5,9 +5,25 @@
 #include <regex>
 
 
-ImFont *iconFontRegular = nullptr;
-ImFont *iconFontSolid = nullptr;
+ImFont *iconFontRegular = nullptr;// Font for regular icons
+ImFont *iconFontSolid = nullptr;  // Font for solid icons
 
+
+/**
+ * @brief Constructor for the GuiManager class.
+ *
+ * This constructor initializes the ImGui library and sets up the fonts and styles for the GUI.
+ *
+ * @param window A pointer to the GLFWwindow object.
+ *
+ * The constructor performs the following tasks:
+ * - Checks the ImGui version.
+ * - Creates an ImGui context.
+ * - Adds a default font from a TTF file.
+ * - Adds FontAwesome icons to the font atlas.
+ * - Sets the ImGui style to light.
+ * - Initializes ImGui for GLFW and OpenGL.
+ */
 GuiManager::GuiManager(GLFWwindow *window) : window(window) {
     // Initialize ImGui
     IMGUI_CHECKVERSION();
@@ -136,21 +152,35 @@ void sortMovies(std::vector<Movie> &movies) {
     });
 }
 
+/**
+ * @brief Renders the GUI for the Movie Manager App.
+ *
+ * This function handles the rendering of the main GUI window, including the search bar, search button,
+ * search results table, and favorite movies table. It also manages the search query input and the display
+ * of search results and favorite movies.
+ *
+ * @param searchQuery Reference to the search query string.
+ * @param movies Reference to the vector of movies to display.
+ * @param moviesMutex Mutex to protect access to the movies vector.
+ * @param isSearching Atomic boolean indicating if a search is in progress.
+ * @param queryCopy Copy of the search query string.
+ * @param apiKey API key for downloading movie posters.
+ */
 void GuiManager::render(std::string &searchQuery, std::vector<Movie> &movies, std::mutex &moviesMutex,
                         std::atomic<bool> &isSearching,
                         std::string queryCopy, const std::string &apiKey) {
+    // Load favorite movies from file
     loadFavoritesFromFile();
-
-
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
     ImVec2 windowSize = ImGui::GetIO().DisplaySize;
     float centerX = windowSize.x * 0.5f;
-
+    // Main Window
     ImGui::SetNextWindowPos(ImVec2(0, 0));
     ImGui::SetNextWindowSize(windowSize);
+    // Main window with no title bar, no resize, no move
     ImGui::Begin("Movie Manager App", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
     // Centered Title
@@ -164,7 +194,7 @@ void GuiManager::render(std::string &searchQuery, std::vector<Movie> &movies, st
     ImGui::PushItemWidth(searchBarWidth);
     ImGui::InputText("##search", buffer, sizeof(buffer), ImGuiInputTextFlags_AutoSelectAll);
     ImGui::PopItemWidth();
-
+    // flag to check if the search query is empty
     bool flag = false;
 
     // Centered Search Button
@@ -179,6 +209,7 @@ void GuiManager::render(std::string &searchQuery, std::vector<Movie> &movies, st
     bool searching = isSearching.load(std::memory_order_relaxed);
     if (!searching) flag = true;
 
+    // Display search query in center
     if (searching) {
         ImGui::SetCursorPosX(centerX - ImGui::CalcTextSize("Searching...").x * 0.5f);
         ImGui::Text("Searching...");
@@ -186,49 +217,46 @@ void GuiManager::render(std::string &searchQuery, std::vector<Movie> &movies, st
 
     // Display search results with sorting
     if (!movies.empty()) {
-        ImGui::SetCursorPosX(5);
-        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10.0f, 10.0f));// רווח בין פריטים
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5.0f, 5.0f)); // ריווח לכפתורים
+        ImGui::SetCursorPosX(5);                                                      // Set cursor position to left
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10.0f, 10.0f));         // Set spacing between items
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5.0f, 5.0f));          // Set padding for frames
+        ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.3f, 0.3f, 0.3f, 1.0f));       // Set header color
+        ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.4f, 0.4f, 0.4f, 1.0f));       // Set border color
+        ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.1f, 0.3f, 0.7f, 1.0f));       // Set border color
+        ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));     // Set window background color
+        ImGui::PushStyleColor(ImGuiCol_TableRowBg, ImVec4(0.15f, 0.15f, 0.15f, 1.0f));// Set table row background color
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.5f, 0.9f, 1.0f));       // Set button color
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.6f, 1.0f, 1.0f));// Set button hover color
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.4f, 0.8f, 1.0f)); // Set button active color
 
-        ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.3f, 0.3f, 0.3f, 1.0f));// רקע כהה יותר לכותרות טבלאות
-        ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.4f, 0.4f, 0.4f, 1.0f));// קווי הפרדה ברורים יותר
-        ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.1f, 0.3f, 0.7f, 1.0f));
-        ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));     // רקע כהה
-        ImGui::PushStyleColor(ImGuiCol_TableRowBg, ImVec4(0.15f, 0.15f, 0.15f, 1.0f));// צבע רקע לטבלה
-        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.5f, 0.9f, 1.0f));       // צבע כפתורים
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.6f, 1.0f, 1.0f));// צבע כשהעכבר מעל
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.4f, 0.8f, 1.0f)); // צבע בלחיצה
-
-
-        if (ImGui::BeginTable("Movies Table", 6, ImGuiTableFlags_Sortable | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Borders |// קווים בין העמודות והשורות
-                                                         ImGuiTableFlags_BordersInnerV |                                              // קווים פנימיים אנכיים
-                                                         ImGuiTableFlags_BordersInnerH |                                              // קווים פנימיים אופקיים
-                                                         ImGuiTableFlags_BordersOuter)) {
-            ImGui::TableSetupColumn("Title", ImGuiTableColumnFlags_DefaultSort | ImGuiTableColumnFlags_WidthStretch, 600.0f, Title);
-            ImGui::TableSetupColumn("Year", ImGuiTableColumnFlags_DefaultSort, 100.0f, Year);
-            ImGui::TableSetupColumn("Genre", ImGuiTableColumnFlags_WidthStretch, 300.0f);
-            ImGui::TableSetupColumn("IMDB Rating", ImGuiTableColumnFlags_DefaultSort, 100.0f, Rating);
-            ImGui::TableSetupColumn("Poster", ImGuiTableColumnFlags_WidthFixed, 100.0f);
-            ImGui::TableSetupColumn("");
-            ImGui::TableHeadersRow();
+        // Display table with search results
+        if (ImGui::BeginTable("Movies Table", 6, ImGuiTableFlags_Sortable | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Borders | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_BordersOuter))// Table with 6 columns and sortable
+        {
+            ImGui::TableSetupColumn("Title", ImGuiTableColumnFlags_DefaultSort | ImGuiTableColumnFlags_WidthStretch, 600.0f, Title);// Default sort by title
+            ImGui::TableSetupColumn("Year", ImGuiTableColumnFlags_DefaultSort, 100.0f, Year);                                       // Default sort by year
+            ImGui::TableSetupColumn("Genre", ImGuiTableColumnFlags_WidthStretch, 300.0f);                                           // Stretch to fill available space
+            ImGui::TableSetupColumn("IMDB Rating", ImGuiTableColumnFlags_DefaultSort, 100.0f, Rating);                              // Default sort by rating
+            ImGui::TableSetupColumn("Poster", ImGuiTableColumnFlags_WidthFixed, 100.0f);                                            // Fixed width for poster
+            ImGui::TableSetupColumn("");                                                                                            // Empty column for like button
+            ImGui::TableHeadersRow();                                                                                               // Headers Row
 
             // Sorting Logic
             if (ImGuiTableSortSpecs *sortSpecs = ImGui::TableGetSortSpecs()) {
                 if (sortSpecs->SpecsDirty && sortSpecs->SpecsCount > 0) {
                     const ImGuiTableColumnSortSpecs *sortSpec = &sortSpecs->Specs[0];
-
+                    // Set current sort column and direction
                     currentSortColumn = static_cast<SortColumn>(sortSpec->ColumnUserID);
                     sortAscending = (sortSpec->SortDirection == ImGuiSortDirection_Ascending);
-
+                    // Sort the movies vector
                     sortMovies(movies);
                     sortSpecs->SpecsDirty = false;
                 }
             }
 
-            std::lock_guard<std::mutex> lock(moviesMutex);
+            std::lock_guard<std::mutex> lock(moviesMutex);// Lock the movies vector while reading
+            // Display each movie in a row of the table with title, year, genre, rating, poster, and like button columns
             for (const auto &movie: movies) {
                 ImGui::TableNextRow();
-
                 ImGui::TableSetColumnIndex(0);
                 ImGui::Text("%s", movie.title.c_str());
                 ImGui::TableSetColumnIndex(1);
@@ -237,10 +265,10 @@ void GuiManager::render(std::string &searchQuery, std::vector<Movie> &movies, st
                 ImGui::Text("%s", movie.genre.c_str());
                 ImGui::TableSetColumnIndex(3);
                 ImGui::Text("%s", movie.imdbRating.c_str());
-
                 ImGui::TableSetColumnIndex(4);
+                //Path of the poster image
                 std::string posterPath = "cache/" + movie.title + ".jpg";
-                // אם הפוסטר עדיין לא ירד, נוריד אותו
+                // Download the poster image if it does not exist
                 if (!std::ifstream(posterPath)) {
                     std::cout << "Downloading poster for: " << movie.title << std::endl;
                     DownloadImageFromURL(movie.posterUrl, posterPath, apiKey);
@@ -249,30 +277,27 @@ void GuiManager::render(std::string &searchQuery, std::vector<Movie> &movies, st
                 //loading poster from local file
                 GLuint texture = LoadTextureFromFile(posterPath);
                 if (texture) {
-                    ImGui::Image((ImTextureID) (uintptr_t) texture, ImVec2(50, 75));// 🔹 גודל קומפקטי יותר
+                    ImGui::Image((ImTextureID) (uintptr_t) texture, ImVec2(50, 75));// Display the poster image
                 } else {
-                    ImGui::Text("No Image");
+                    ImGui::Text("No Image");// Display text if image not found
                 }
+
                 ImGui::TableSetColumnIndex(5);
-                if (iconFontRegular) ImGui::PushFont(iconFontRegular);
+                if (iconFontRegular) ImGui::PushFont(iconFontRegular);// Set font for like button
 
-                // יצירת ID ייחודי לכל סרט
-                std::string buttonID = "##Like" + movie.title + movie.year;
+                std::string buttonID = "##Like" + movie.title + movie.year;// Button ID for like button
 
-                // קביעת גודל הכפתור (שהוא כולו כוכב)
-                ImVec2 buttonSize(30, 30);
-
-                // יצירת כפתור בלתי נראה (כל השטח הופך לכפתור)
+                ImVec2 buttonSize(30, 30);// Size of the like button
+                // Invisible button for like button
                 if (ImGui::InvisibleButton(buttonID.c_str(), buttonSize)) {
-                    addMovieToFavorites(movie);// הפעולה תתבצע רק אם נלחץ
+                    addMovieToFavorites(movie);// Add movie to favorites if button is clicked
                 }
 
-                // הצגת האייקון **בדיוק במיקום של הכפתור**
-                ImVec2 buttonMin = ImGui::GetItemRectMin();
-                ImVec2 iconPos = ImVec2(buttonMin.x + (buttonSize.x / 2) - 8, buttonMin.y + (buttonSize.y / 2) - 8);
-                ImGui::SetCursorScreenPos(iconPos);
-                ImGui::Text("\xef\x80\x85");// הצגת אייקון כוכב
-
+                ImVec2 buttonMin = ImGui::GetItemRectMin();                                                         // Get minimum position of the button
+                ImVec2 iconPos = ImVec2(buttonMin.x + (buttonSize.x / 2) - 8, buttonMin.y + (buttonSize.y / 2) - 8);// Position of the icon
+                ImGui::SetCursorScreenPos(iconPos);                                                                 // Set cursor position to icon position
+                ImGui::Text("\xef\x80\x85");                                                                        // Display the like icon
+                // Pop font after displaying the icon
                 if (iconFontRegular) ImGui::PopFont();
             }
 
@@ -281,6 +306,7 @@ void GuiManager::render(std::string &searchQuery, std::vector<Movie> &movies, st
         ImGui::PopStyleColor(8);
         ImGui::PopStyleVar(2);
     } else {
+        // Display message if no results found and search query is not empty
         if (flag == true && queryCopy[0] != '\0') {
             ImGui::NewLine();
             ImGui::SetCursorPosX(centerX - ImGui::CalcTextSize("No Results Found").x * 0.5f);
@@ -292,17 +318,15 @@ void GuiManager::render(std::string &searchQuery, std::vector<Movie> &movies, st
     ImGui::NewLine();
 
     // Display favorite movies
-    ImGui::Separator();
-    ImGui::Text("Favorite Movies:");
-    if (ImGui::BeginTable("Favorites Table", 3, ImGuiTableFlags_Sortable | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Borders |// קווים בין העמודות והשורות
-                                                        ImGuiTableFlags_BordersInnerV |                                              // קווים פנימיים אנכיים
-                                                        ImGuiTableFlags_BordersInnerH |                                              // קווים פנימיים אופקיים
-                                                        ImGuiTableFlags_BordersOuter)) {
+    ImGui::Separator();                                                                                                                                                                                                             // Separator line
+    ImGui::Text("Favorite Movies:");                                                                                                                                                                                                // Title for favorite movies
+    if (ImGui::BeginTable("Favorites Table", 3, ImGuiTableFlags_Sortable | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Borders | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_BordersOuter))// Table with 3 columns
+    {
         ImGui::TableSetupColumn("Title");
         ImGui::TableSetupColumn("Year");
         ImGui::TableSetupColumn("");
         ImGui::TableHeadersRow();
-
+        // Display each favorite movie in a row of the table with title, year, and dislike button columns
         for (const auto &movie: favoriteMovies) {
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
@@ -312,42 +336,38 @@ void GuiManager::render(std::string &searchQuery, std::vector<Movie> &movies, st
 
             ImGui::TableSetColumnIndex(2);
 
-            if (iconFontSolid) ImGui::PushFont(iconFontSolid);
-
-            // יצירת ID ייחודי לכל סרט
+            if (iconFontSolid) ImGui::PushFont(iconFontSolid);// Set font for dislike button
+            // Button ID for dislike button
             std::string buttonID = "##Dislike" + movie.title + movie.year;
 
-            // קביעת גודל הכפתור (שהוא כולו כוכב)
             ImVec2 buttonSize(30, 30);
-
-            // יצירת כפתור בלתי נראה (כל השטח הופך לכפתור)
+            // Invisible button for dislike button
             if (ImGui::InvisibleButton(buttonID.c_str(), buttonSize)) {
                 removeMovieFromFavorites(movie);
             }
 
-            // הצגת האייקון **בדיוק במיקום של הכפתור**
             ImVec2 buttonMin = ImGui::GetItemRectMin();
             ImVec2 iconPos = ImVec2(buttonMin.x + (buttonSize.x / 2) - 8, buttonMin.y + (buttonSize.y / 2) - 8);
             ImGui::SetCursorScreenPos(iconPos);
-            ImGui::Text("\xef\x80\x85");// הצגת אייקון כוכב
+            ImGui::Text("\xef\x80\x85");
 
             if (iconFontSolid) ImGui::PopFont();
         }
-
+        // End table for favorite movies
         ImGui::EndTable();
     }
 
-
+    // End main window
     ImGui::End();
 
-    // Render ImGui
+    // Render GUI and swap buffers
     ImGui::Render();
-    int display_w, display_h;
-    glfwGetFramebufferSize(window, &display_w, &display_h);
-    glViewport(0, 0, display_w, display_h);
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    int display_w, display_h;                              // Display width and height
+    glfwGetFramebufferSize(window, &display_w, &display_h);// Get framebuffer size
+    glViewport(0, 0, display_w, display_h);                // Set viewport
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);                  // Clear color
+    glClear(GL_COLOR_BUFFER_BIT);                          // Clear color buffer
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());// Render draw data
 
-    glfwSwapBuffers(window);
+    glfwSwapBuffers(window);// Swap buffers
 }
