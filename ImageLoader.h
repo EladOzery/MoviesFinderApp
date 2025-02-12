@@ -1,0 +1,8 @@
+//
+// Created by Halel on 12/02/2025.
+//
+
+#ifndef STB_IMAGE_WRITE_H_IMAGELOADER_H
+#define STB_IMAGE_WRITE_H_IMAGELOADER_H
+
+#endif //STB_IMAGE_WRITE_H_IMAGELOADER_H
