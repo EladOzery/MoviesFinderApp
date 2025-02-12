@@ -1,2 +1,3 @@
-
-/external/imgui
+/cmake-build-debug
+.idea
+.vscode
