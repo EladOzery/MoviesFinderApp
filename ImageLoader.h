@@ -1,8 +1,12 @@
-//
-// Created by Halel on 12/02/2025.
-//
+#ifndef IMAGE_LOADER_H
+#define IMAGE_LOADER_H
 
-#ifndef STB_IMAGE_WRITE_H_IMAGELOADER_H
-#define STB_IMAGE_WRITE_H_IMAGELOADER_H
+#include <winsock2.h>
+#include <windows.h>
+#include <string>
+#include <GL/gl.h>
 
-#endif //STB_IMAGE_WRITE_H_IMAGELOADER_H
+bool DownloadImageFromURL(const std::string& imdbID, const std::string& savePath, const std::string& apiKey);
+GLuint LoadTextureFromFile(const std::string& filename);
+
+#endif // IMAGE_LOADER_H
