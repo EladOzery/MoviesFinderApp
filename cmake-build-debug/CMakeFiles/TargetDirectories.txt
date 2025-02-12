@@ -1,3 +1,0 @@
-C:/Users/Halel/CLionProjects/MoviesApp/cmake-build-debug/CMakeFiles/MoviesApp.dir
-C:/Users/Halel/CLionProjects/MoviesApp/cmake-build-debug/CMakeFiles/edit_cache.dir
-C:/Users/Halel/CLionProjects/MoviesApp/cmake-build-debug/CMakeFiles/rebuild_cache.dir
