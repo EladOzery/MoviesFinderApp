@@ -7,6 +7,8 @@
 
 ImFont *iconFontRegular = nullptr;// Font for regular icons
 ImFont *iconFontSolid = nullptr;  // Font for solid icons
+ImFont *HadFontSolid = nullptr;  // Font for solid icons
+
 
 
 /**
@@ -30,13 +32,29 @@ GuiManager::GuiManager(GLFWwindow *window) : window(window) {
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
     (void) io;
-    ImFont *defaultFont = io.Fonts->AddFontFromFileTTF("../external/imgui/misc/fonts/DroidSans.ttf", 30.0f);
-    static const ImWchar icons_ranges[] = {0xf000, 0xf3ff, 0};// Unicode range for FontAwesome
-    ImFontConfig config;
-    config.MergeMode = true;// Merge with previous font
-    config.PixelSnapH = true;
-    iconFontRegular = io.Fonts->AddFontFromFileTTF("../external/imgui/misc/fonts/fa-regular-400.ttf", 18.0f, &config, icons_ranges);
-    iconFontSolid = io.Fonts->AddFontFromFileTTF("../external/imgui/misc/fonts/fa-Solid-900.ttf", 18.0f, &config, icons_ranges);
+    // טווח Unicode עבור FontAwesome רגיל (אייקונים בסיסיים)
+    static const ImWchar icons_ranges_regular[] = { 0xf004, 0xf3ff, 0 };
+
+    // טווח Unicode עבור FontAwesome Solid (אייקונים מלאים)
+    static const ImWchar icons_ranges_solid[] = { 0xf000, 0xf3ff, 0 };
+
+
+    // הגדרת פונט טקסט רגיל (למשל Roboto)
+    ImFont* defaultFont = io.Fonts->AddFontFromFileTTF("../external/imgui/misc/fonts/DroidSans.ttf", 25.0f);
+
+    // הגדרת פונט FontAwesome Regular (אייקונים ריקים)
+    ImFontConfig config_regular;
+    config_regular.MergeMode = true;
+    config_regular.PixelSnapH = true;
+    ImFont* iconFontRegular = io.Fonts->AddFontFromFileTTF("../external/imgui/misc/fonts/fa-regular-400.ttf", 18.0f, &config_regular, icons_ranges_regular);
+
+    // הגדרת פונט FontAwesome Solid (אייקונים מלאים)
+    ImFontConfig config_solid;
+    config_solid.MergeMode = true;
+    config_solid.PixelSnapH = true;
+    ImFont* iconFontSolid = io.Fonts->AddFontFromFileTTF("../external/imgui/misc/fonts/fa-solid-900.ttf", 18.0f, &config_solid, icons_ranges_solid);
+    HadFontSolid = io.Fonts->AddFontFromFileTTF("../external/imgui/misc/fonts/Roboto-Medium.ttf", 75.0f);
+
     io.Fonts->Build();
 
     ImGui::StyleColorsLight();
@@ -147,7 +165,7 @@ void sortMovies(std::vector<Movie> &movies) {
     std::sort(movies.begin(), movies.end(), [](const Movie &a, const Movie &b) {
         if (currentSortColumn == Title) return (sortAscending) ? (a.title < b.title) : (a.title > b.title);
         if (currentSortColumn == Year) return (sortAscending) ? (a.year < b.year) : (a.year > b.year);
-        if (currentSortColumn == Rating) return (sortAscending) ? (a.imdbRating > b.imdbRating) : (a.imdbRating < b.imdbRating);
+        if (currentSortColumn == Rating) return (sortAscending) ? (a.imdbRating < b.imdbRating) : (a.imdbRating > b.imdbRating);
         return false;
     });
 }
@@ -184,20 +202,29 @@ void GuiManager::render(std::string &searchQuery, std::vector<Movie> &movies, st
     ImGui::Begin("Movie Manager App", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
     // Centered Title
-    ImGui::SetCursorPosX(centerX - ImGui::CalcTextSize("Movie Search").x * 0.5f);
-    ImGui::Text("Movie Search");
+    ImGui::PushFont(HadFontSolid);
+    ImGui::SetCursorPosX(centerX - ImGui::CalcTextSize("Movie-Search").x * 0.5f);
+    ImGui::Text("Movie-Search");
+    ImGui::PopFont();
+
 
     // Centered Search Bar
     float searchBarWidth = 300.0f;
     ImGui::SetCursorPosX(centerX - searchBarWidth * 0.5f);
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 12.0f);
     static char buffer[128] = "";
     ImGui::PushItemWidth(searchBarWidth);
     ImGui::InputText("##search", buffer, sizeof(buffer), ImGuiInputTextFlags_AutoSelectAll);
     ImGui::PopItemWidth();
+    ImGui::PopStyleVar();
+
+
     // flag to check if the search query is empty
     bool flag = false;
 
     // Centered Search Button
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 12.0f);
+
     ImGui::SetCursorPosX(centerX - 40);
     if (ImGui::Button("Search", ImVec2(80, 30))) {
         if (!isSearching) {
@@ -205,6 +232,9 @@ void GuiManager::render(std::string &searchQuery, std::vector<Movie> &movies, st
             isSearching = true;
         }
     }
+    ImGui::PopStyleVar();
+
+
 
     bool searching = isSearching.load(std::memory_order_relaxed);
     if (!searching) flag = true;
@@ -232,11 +262,12 @@ void GuiManager::render(std::string &searchQuery, std::vector<Movie> &movies, st
         // Display table with search results
         if (ImGui::BeginTable("Movies Table", 6, ImGuiTableFlags_Sortable | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Borders | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_BordersOuter))// Table with 6 columns and sortable
         {
+
+            ImGui::TableSetupColumn("Poster", ImGuiTableColumnFlags_WidthFixed, 100.0f);                                            // Fixed width for poster
             ImGui::TableSetupColumn("Title", ImGuiTableColumnFlags_DefaultSort | ImGuiTableColumnFlags_WidthStretch, 600.0f, Title);// Default sort by title
             ImGui::TableSetupColumn("Year", ImGuiTableColumnFlags_DefaultSort, 100.0f, Year);                                       // Default sort by year
             ImGui::TableSetupColumn("Genre", ImGuiTableColumnFlags_WidthStretch, 300.0f);                                           // Stretch to fill available space
             ImGui::TableSetupColumn("IMDB Rating", ImGuiTableColumnFlags_DefaultSort, 100.0f, Rating);                              // Default sort by rating
-            ImGui::TableSetupColumn("Poster", ImGuiTableColumnFlags_WidthFixed, 100.0f);                                            // Fixed width for poster
             ImGui::TableSetupColumn("");                                                                                            // Empty column for like button
             ImGui::TableHeadersRow();                                                                                               // Headers Row
 
@@ -255,35 +286,34 @@ void GuiManager::render(std::string &searchQuery, std::vector<Movie> &movies, st
 
             std::lock_guard<std::mutex> lock(moviesMutex);// Lock the movies vector while reading
             // Display each movie in a row of the table with title, year, genre, rating, poster, and like button columns
-            for (const auto &movie: movies) {
+            for ( auto &movie: movies) {
                 ImGui::TableNextRow();
-                ImGui::TableSetColumnIndex(0);
-                ImGui::Text("%s", movie.title.c_str());
                 ImGui::TableSetColumnIndex(1);
-                ImGui::Text("%s", movie.year.c_str());
+                ImGui::Text("%s", movie.title.c_str());
                 ImGui::TableSetColumnIndex(2);
-                ImGui::Text("%s", movie.genre.c_str());
+                ImGui::Text("%s", movie.year.c_str());
                 ImGui::TableSetColumnIndex(3);
-                ImGui::Text("%s", movie.imdbRating.c_str());
+                ImGui::Text("%s", movie.genre.c_str());
                 ImGui::TableSetColumnIndex(4);
+                ImGui::Text("%s", movie.imdbRating.c_str());
+                ImGui::TableSetColumnIndex(0);
                 //Path of the poster image
                 std::string posterPath = "cache/" + movie.title + ".jpg";
-                // Download the poster image if it does not exist
-                if (!std::ifstream(posterPath)) {
-                    std::cout << "Downloading poster for: " << movie.title << std::endl;
-                    DownloadImageFromURL(movie.posterUrl, posterPath, apiKey);
-                }
+
 
                 //loading poster from local file
-                GLuint texture = LoadTextureFromFile(posterPath);
-                if (texture) {
-                    ImGui::Image((ImTextureID) (uintptr_t) texture, ImVec2(50, 75));// Display the poster image
+                if(movie.texture==-1) {
+                     movie.texture = LoadTextureFromFile(posterPath);
+                }
+                if (movie.texture) {
+                    ImGui::Image((ImTextureID) (uintptr_t) movie.texture, ImVec2(100, 150));// Display the poster image
                 } else {
                     ImGui::Text("No Image");// Display text if image not found
+                    movie.texture=0;
                 }
 
                 ImGui::TableSetColumnIndex(5);
-                if (iconFontRegular) ImGui::PushFont(iconFontRegular);// Set font for like button
+
 
                 std::string buttonID = "##Like" + movie.title + movie.year;// Button ID for like button
 
@@ -293,12 +323,30 @@ void GuiManager::render(std::string &searchQuery, std::vector<Movie> &movies, st
                     addMovieToFavorites(movie);// Add movie to favorites if button is clicked
                 }
 
+                bool isHovered = ImGui::IsItemHovered();
+
+
                 ImVec2 buttonMin = ImGui::GetItemRectMin();                                                         // Get minimum position of the button
                 ImVec2 iconPos = ImVec2(buttonMin.x + (buttonSize.x / 2) - 8, buttonMin.y + (buttonSize.y / 2) - 8);// Position of the icon
                 ImGui::SetCursorScreenPos(iconPos);                                                                 // Set cursor position to icon position
-                ImGui::Text("\xef\x80\x85");                                                                        // Display the like icon
-                // Pop font after displaying the icon
-                if (iconFontRegular) ImGui::PopFont();
+
+                if(isHovered){
+                    if (iconFontSolid) ImGui::PushFont(iconFontSolid);// Set font for like button
+
+                    ImGui::Text("\xef\x80\x84");
+                    // Pop font after displaying the icon
+                    if (iconFontSolid) ImGui::PopFont();
+
+                }
+                else {
+                    if (iconFontRegular) ImGui::PushFont(iconFontRegular);// Set font for like button
+
+                    ImGui::Text("\xef\x80\x85");// Display the like icon
+                    if (iconFontRegular) ImGui::PopFont();
+
+                }
+
+
             }
 
             ImGui::EndTable();
@@ -349,7 +397,8 @@ void GuiManager::render(std::string &searchQuery, std::vector<Movie> &movies, st
             ImVec2 buttonMin = ImGui::GetItemRectMin();
             ImVec2 iconPos = ImVec2(buttonMin.x + (buttonSize.x / 2) - 8, buttonMin.y + (buttonSize.y / 2) - 8);
             ImGui::SetCursorScreenPos(iconPos);
-            ImGui::Text("\xef\x80\x85");
+            ImGui::Text("\xef\x80\x84");
+
 
             if (iconFontSolid) ImGui::PopFont();
         }

@@ -57,7 +57,8 @@ void searchMovies(OMDbApi &api, std::string query, std::vector<Movie> &movies, s
         cleanMovieStr.erase(std::remove(cleanMovieStr.begin(), cleanMovieStr.end(), '\r'), cleanMovieStr.end());
 
         // Remove leading and trailing whitespace from the movie string
-        cleanMovieStr = std::regex_replace(cleanMovieStr, std::regex("^\\s+|\\s+$"), "");
+
+
         // Check if the movie string matches the expected pattern
         if (std::regex_match(cleanMovieStr, match, moviePattern)) {
             std::string title = match[1].str();     // Group 1: Movie Title
