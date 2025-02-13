@@ -10,6 +10,7 @@ ImFont *iconFontSolid = nullptr;  // Font for solid icons
 ImFont *HadFontSolid = nullptr;  // Font for solid icons
 
 
+
 /**
  * @brief Constructor for the GuiManager class.
  *
@@ -206,6 +207,7 @@ void GuiManager::render(std::string &searchQuery, std::vector<Movie> &movies, st
     ImGui::Text("Movie-Search");
     ImGui::PopFont();
 
+
     // Centered Search Bar
     float searchBarWidth = 300.0f;
     ImGui::SetCursorPosX(centerX - searchBarWidth * 0.5f);
@@ -215,6 +217,7 @@ void GuiManager::render(std::string &searchQuery, std::vector<Movie> &movies, st
     ImGui::InputText("##search", buffer, sizeof(buffer), ImGuiInputTextFlags_AutoSelectAll);
     ImGui::PopItemWidth();
     ImGui::PopStyleVar();
+
 
     // flag to check if the search query is empty
     bool flag = false;
@@ -230,6 +233,7 @@ void GuiManager::render(std::string &searchQuery, std::vector<Movie> &movies, st
         }
     }
     ImGui::PopStyleVar();
+
 
 
     bool searching = isSearching.load(std::memory_order_relaxed);
@@ -258,6 +262,7 @@ void GuiManager::render(std::string &searchQuery, std::vector<Movie> &movies, st
         // Display table with search results
         if (ImGui::BeginTable("Movies Table", 6, ImGuiTableFlags_Sortable | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Borders | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_BordersOuter))// Table with 6 columns and sortable
         {
+
             ImGui::TableSetupColumn("Poster", ImGuiTableColumnFlags_WidthFixed, 100.0f);                                            // Fixed width for poster
             ImGui::TableSetupColumn("Title", ImGuiTableColumnFlags_DefaultSort | ImGuiTableColumnFlags_WidthStretch, 600.0f, Title);// Default sort by title
             ImGui::TableSetupColumn("Year", ImGuiTableColumnFlags_DefaultSort, 100.0f, Year);                                       // Default sort by year
@@ -309,6 +314,7 @@ void GuiManager::render(std::string &searchQuery, std::vector<Movie> &movies, st
 
                 ImGui::TableSetColumnIndex(5);
 
+
                 std::string buttonID = "##Like" + movie.title + movie.year;// Button ID for like button
 
                 ImVec2 buttonSize(30, 30);// Size of the like button
@@ -316,11 +322,14 @@ void GuiManager::render(std::string &searchQuery, std::vector<Movie> &movies, st
                 if (ImGui::InvisibleButton(buttonID.c_str(), buttonSize)) {
                     addMovieToFavorites(movie);// Add movie to favorites if button is clicked
                 }
+
                 bool isHovered = ImGui::IsItemHovered();
+
 
                 ImVec2 buttonMin = ImGui::GetItemRectMin();                                                         // Get minimum position of the button
                 ImVec2 iconPos = ImVec2(buttonMin.x + (buttonSize.x / 2) - 8, buttonMin.y + (buttonSize.y / 2) - 8);// Position of the icon
                 ImGui::SetCursorScreenPos(iconPos);                                                                 // Set cursor position to icon position
+
                 if(isHovered){
                     if (iconFontSolid) ImGui::PushFont(iconFontSolid);// Set font for like button
 
@@ -336,6 +345,7 @@ void GuiManager::render(std::string &searchQuery, std::vector<Movie> &movies, st
                     if (iconFontRegular) ImGui::PopFont();
 
                 }
+
 
             }
 
@@ -388,6 +398,7 @@ void GuiManager::render(std::string &searchQuery, std::vector<Movie> &movies, st
             ImVec2 iconPos = ImVec2(buttonMin.x + (buttonSize.x / 2) - 8, buttonMin.y + (buttonSize.y / 2) - 8);
             ImGui::SetCursorScreenPos(iconPos);
             ImGui::Text("\xef\x80\x84");
+
 
             if (iconFontSolid) ImGui::PopFont();
         }
